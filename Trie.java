@@ -1,6 +1,6 @@
 private class TrieNode {
-private TrieNode[] children; // πίνακας 26 θέσεων για a-z
-private boolean isEndOfWord; // true αν εδώ τελειώνει λέξη
+    private TrieNode[] children;
+    private boolean isEndOfWord;
 public TrieNode() { /* Υλοποίηση */ }
 }
 public class Trie {
