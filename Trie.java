@@ -55,21 +55,115 @@ public class Trie {
         current.isEndOfWord = true;
     }
 
+    public static void displayHelper(TrieNode node, String word){
+        if (node == null){
+            return;
+        }
+
+        if (node.isEndOfWord){
+            System.out.println(word);
+        }
+
+        for(int i = 0; i < alphabetSize; i++){
+            if(node.children[i] != null){
+                char nextChar = (char) ('a' +  i);
+                displayHelper(node.children[i], word + nextChar);
+            }
+        }
+        
+    }
+
+    public void display(){
+        if (root != null){
+            displayHelper(root, "");
+        }
+    }
+
+    public boolean delete(String key){
+        if(key.equals("")){
+            return false;
+        }
+        for (int i = 0; i < key.length(); i++) {
+            char c = key.charAt(i);
+            if (c < 'a' || c > 'z') return false;
+        }
+
+        if(!search(key)){
+            return false;
+        }
+
+        deleteHelper(root, key, 0);
+        return true;
+    }
+
+    private static boolean hasNoChildren(TrieNode node){
+        for(int i = 0; i < alphabetSize; i++){
+            if(node.children[i] != null){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean deleteHelper(TrieNode node, String key, int depth){
+        if (node == null){
+            return false;
+        }
+
+        if(depth == key.length()){
+            node.isEndOfWord = false;
+            return hasNoChildren(node);
+        }
+
+        int index = key.charAt(depth) - 'a';
+        TrieNode child = node.children[index];
+
+        // Not necessary but safe because of search(key)
+        if(child == null){
+            return false;
+        }
+        
+        boolean shouldDeleteChild = deleteHelper(child, key, depth + 1);
+        if(shouldDeleteChild){
+            node.children[index] = null;
+        }
+
+        return !node.isEndOfWord && hasNoChildren(node);
+    }
+
     // Test program
     public static void main(String[] args) {
         Trie trie = new Trie();
-
-        // Insert some words
-        trie.insert("apple");
         trie.insert("app");
+        trie.insert("apple");
+        trie.insert("bat");
+        trie.insert("band");
         trie.insert("banana");
 
-        // Test searches
-        System.out.println("Search 'apple': " + trie.search("apple"));   // true
-        System.out.println("Search 'app': " + trie.search("app"));       // true
-        System.out.println("Search 'banana': " + trie.search("banana")); // true
-        System.out.println("Search 'ban': " + trie.search("ban"));       // false
-        System.out.println("Search 'orange': " + trie.search("orange")); // false
+        System.out.println("Initial words:");
+        trie.display();
+
+        // 1) Δεν υπάρχει στο δέντρο
+        System.out.println("\nDelete 'cat' (not present): " + trie.delete("cat"));
+        trie.display();
+
+        // 2) Το στοιχείο αποτελεί πρόθεμα άλλου (app -> apple)
+        System.out.println("\nDelete 'app' (prefix of 'apple'): " + trie.delete("app"));
+        System.out.println("Search 'app' after delete: " + trie.search("app"));       // false
+        System.out.println("Search 'apple' after delete: " + trie.search("apple"));   // true
+        trie.display();
+
+        // 3) Αυτόνομο στοιχείο (bat)
+        System.out.println("\nDelete 'bat' (autonomous): " + trie.delete("bat"));
+        System.out.println("Search 'bat' after delete: " + trie.search("bat"));       // false
+        trie.display();
+
+        // 4) Το στοιχείο έχει άλλα ως πρόθεμα: διαγραφή από το τέρμα προς τα πάνω μέχρι prefix
+        // π.χ. διαγράφουμε 'banana' ενώ υπάρχει 'band' (μοιράζονται "ban")
+        System.out.println("\nDelete 'banana' (shares prefix 'ban' with 'band'): " + trie.delete("banana"));
+        System.out.println("Search 'band' after delete: " + trie.search("band"));     // true
+        System.out.println("Search 'banana' after delete: " + trie.search("banana")); // false
+        trie.display();
     }
 }
 
