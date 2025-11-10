@@ -9,7 +9,7 @@ public class CompressedTrie {
         if(word == null){
             return;
         }
-        insertAt(root, word);
+        insertHelper(root, word);
     }
 
     private void insertHelper(CompressedTrieNode current, String word){
