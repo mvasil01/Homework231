@@ -8,37 +8,14 @@ public class CompressedTrieNode{
     }
 
     public void insertEdge(Edge edge){
-        if(edgeList == null){
-            edgeList.insert(edge);
-            return;
+        if(edge == null){
+            throw new RuntimeException("The edge given to insert is null");
         }
-        char c = edge.label.charAt(0);
-        Edge current = edgeList.getEdge(c);
-        if(current == null){
-            edgeList.insert(edge);
-            return;
-        }
-        
-        int cnt = 0;
-        String rest;
-        for(int i = 0; i < current.label.length(); i++){
-            if(current.label.charAt(i) != edge.label.charAt(i)){
-                break;
-            }
-            cnt++;
-        }
-        rest = current.label.substring(cnt - 1);
-        CompressedTrieNode newChild = new CompressedTrieNode();
-        newChild.edgeList.insert(new Edge(rest, current.child));
-        rest = edge.label.substring()
-        current.label = current.label.substring(0, cnt - 1);
-        current.child = newChild;
-        
+        edgeList.insert(edge);
     }
 
+
     public Edge getEdgeByFirstChar(char c){
-
-        
-
+        return edgeList.getEdge(c);
     }
 }
