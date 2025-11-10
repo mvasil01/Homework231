@@ -11,28 +11,34 @@ public class CompressedTrie {
         }
         insertHelper(root, word);
     }
-
+    
     private void insertHelper(CompressedTrieNode current, String word){
         if(word.isEmpty()){
             current.isEndOfWord = true;
+            return;
         }
 
         Edge edge = current.getEdgeByFirstChar(word.charAt(0));
+        
         if(edge == null){
             CompressedTrieNode child = new CompressedTrieNode();
             child.isEndOfWord = true;
             current.insertEdge(new Edge(word, child));
+            return;
         }
 
         String label = edge.label;
         int prefixLength = commonPrefixLength(word, label);
 
+        // word == label
         if(prefixLength == label.length() && prefixLength == word.length()){
             edge.child.isEndOfWord = true;
         }
+        // the label is a prefix of the word
         else if(prefixLength == label.length() && prefixLength < word.length()){
             insertHelper(edge.child, word.substring(prefixLength));
         }
+        // The word is a prefix
         else if(prefixLength < label.length() && prefixLength == word.length()){
             CompressedTrieNode oldChild = edge.child;
             CompressedTrieNode mid = new CompressedTrieNode();
@@ -42,6 +48,7 @@ public class CompressedTrie {
             edge.child = mid;
             mid.insertEdge(new Edge(remainder, oldChild));
         }
+        // The word and label have a common prefix
         else if (prefixLength < word.length() && prefixLength < label.length()){
             CompressedTrieNode oldChild = edge.child;
             CompressedTrieNode mid = new CompressedTrieNode();
@@ -78,24 +85,34 @@ public class CompressedTrie {
         }
         return searchHelper(root, word);
     }
-
+    
     public boolean searchHelper(CompressedTrieNode current, String word){
+        
         if(word.isEmpty()){
-            return false;
+            return current.isEndOfWord;
         }
+        
         Edge edge = current.getEdgeByFirstChar(word.charAt(0));
+        
+        // word doesn't exist
         if(edge == null){
             return false;
         }
 
         String label = edge.label;
         int prefixLength = commonPrefixLength(label, word);
+        
+        // The word == label
         if(prefixLength == label.length() && prefixLength == word.length()){
             return edge.child.isEndOfWord;
         }
+        
+        // The label is a PREFIX of the word
         if (prefixLength == label.length() && prefixLength < word.length()) {
             return searchHelper(edge.child, word.substring(prefixLength));
         }
+        
+        // not a word
         return false;
     }
 }
