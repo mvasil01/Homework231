@@ -18,7 +18,7 @@ public class RobinHoodHashing{
         return (label.charAt(0) - 'a') % capacity;
     }
 
-    private int probeLength(int pos){
+    /*private int probeLength(int pos){
         int expected = hashFunction(hashTable[pos].label);
 
         if(pos < expected){
@@ -27,7 +27,7 @@ public class RobinHoodHashing{
         else{
             return pos - expected;
         }
-    }
+    }*/
 
     public void insert(Edge edge){
         if(edge == null || edge.label == null){
@@ -42,7 +42,7 @@ public class RobinHoodHashing{
     }
 
     private void insertNoRehash(Edge edge) {
-        int home = hashFunction(edge.label);
+        int home = hashFunction(edge.label.toLowerCase());
         int idx = home;
         int probeNew = 0;
 
@@ -78,7 +78,7 @@ public class RobinHoodHashing{
         }
     }
     
-    public boolean getEdge(String label){
+    public boolean search(String label){
         int pos = hashFunction(label);
         int index;
         for(int offset = 0; offset <= maxProbeLength; offset++){
@@ -93,6 +93,15 @@ public class RobinHoodHashing{
         }
 
         return false;
+    }
+
+    public Edge getEdge(char c){
+        for(int i = 0; i < capacity; i++){
+            if(hashTable[i] != null && hashTable[i].label.charAt(0) == c){
+                return hashTable[i];
+            }
+        }
+        return null;
     }
 
     private boolean needsRehash(){

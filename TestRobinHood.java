@@ -21,10 +21,10 @@ public class TestRobinHood {
 
         // Test search
         System.out.println("\n=== SEARCH TESTS ===");
-        System.out.println("Contains 'apple'?   " + table.getEdge("apple"));
-        System.out.println("Contains 'banana'?  " + table.getEdge("banana"));
-        System.out.println("Contains 'avocado'? " + table.getEdge("avocado"));
-        System.out.println("Contains 'mango'?   " + table.getEdge("mango"));
+        System.out.println("Contains 'apple'?   " + table.search("apple"));
+        System.out.println("Contains 'banana'?  " + table.search("banana"));
+        System.out.println("Contains 'avocado'? " + table.search("avocado"));
+        System.out.println("Contains 'mango'?   " + table.search("mango"));
 
         System.out.println("\n=== FINAL TABLE ===");
         printTable(table);

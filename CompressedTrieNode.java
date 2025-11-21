@@ -1,9 +1,9 @@
 public class CompressedTrieNode{
-    private SinglyLinkedList edgeList;
+    private RobinHoodHashing edgeList;
     public boolean isEndOfWord;
 
     public CompressedTrieNode(){
-        edgeList = new SinglyLinkedList();
+        edgeList = new RobinHoodHashing();
         isEndOfWord = false;
     }
 
