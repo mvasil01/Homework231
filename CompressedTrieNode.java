@@ -2,6 +2,8 @@ public class CompressedTrieNode{
     private RobinHoodHashing edgeList;
     public boolean isEndOfWord;
 
+    public int importance;
+
     public CompressedTrieNode(){
         edgeList = new RobinHoodHashing();
         isEndOfWord = false;
