@@ -104,9 +104,9 @@ public class RobinHoodHashing{
         return null;
     }
 
-    private boolean needsRehash(){
+    /*private boolean needsRehash(){
         return ((size * 1.0 / capacity )> 0.9);
-    }
+    }*/
 
     private void rehash(){
         int index = 0;

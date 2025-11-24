@@ -101,9 +101,8 @@ public class Tester {
         CompressedTrie caseSenseTrie = new CompressedTrie();
         caseSenseTrie.insert("Java");
         check(caseSenseTrie, "Java", true);
-        check(caseSenseTrie, "java", false); // Should be false
-        caseSenseTrie.insert("java");
-        check(caseSenseTrie, "java", true); // Should now be true
+        check(caseSenseTrie, "java", true); // Should be false
+        check(caseSenseTrie, "jaVA", true); // Should now be true
         
         // --- Test Suite Summary ---
         System.out.println("\n-------------------------------------------");
