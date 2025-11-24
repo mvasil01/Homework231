@@ -1,20 +1,11 @@
-/*
-
-EKAMA NEA KLASI DICTIONARY LOADER
-
-Astin touti na doume pos na thn metapoiisoume
-
-*/
-
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class AutocompleteApp {
+public class DictionaryLoader{
     private CompressedTrie trie;
 
-    public AutocompleteApp(){
+    public DictionaryLoader(){
         trie = new CompressedTrie();
     }
 
@@ -45,15 +36,15 @@ public class AutocompleteApp {
             return;
         }
 
-        AutocompleteApp app = new AutocompleteApp();
-        app.loadDictionary(args[0]);
+        DictionaryLoader dict = new DictionaryLoader();
+        dict.loadDictionary(args[0]);
 
         System.out.println("Sample search test:");
-        System.out.println("Contains 'apple'? " + app.trie.search("apple"));
-        System.out.println("Contains 'banana'? " + app.trie.search("banana"));
-        System.out.println("Contains 'table'? " + app.trie.search("table"));
-        System.out.println("Contains 'user'? " + app.trie.search("user"));
-        System.out.println("Contains 'test'? " + app.trie.search("test"));
-        System.out.println("Contains 'world'? " + app.trie.search("world"));
+        System.out.println("Contains 'apple'? " + dict.trie.search("apple"));
+        System.out.println("Contains 'banana'? " + dict.trie.search("banana"));
+        System.out.println("Contains 'table'? " + dict.trie.search("table"));
+        System.out.println("Contains 'user'? " + dict.trie.search("user"));
+        System.out.println("Contains 'test'? " + dict.trie.search("test"));
+        System.out.println("Contains 'world'? " + dict.trie.search("world"));
     }
 }
