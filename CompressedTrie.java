@@ -178,6 +178,7 @@ public class CompressedTrie {
         }
     }
 
+    
     public WordFrequency[] getTopK(String prefix, int k){
         if(k <= 0){
             return new WordFrequency[0];
@@ -196,6 +197,89 @@ public class CompressedTrie {
         WordFrequency[] result = heap.toArray();
         HeapSort.sort(result);
         return result;
+    }
+
+    private double getSubtreeAverage(CompressedTrieNode startNode) {
+        if (startNode == null) return 0.0;
+
+        long totalImp = 0;
+        int count = 0;
+
+        // dfs
+        hybridStack stack = new hybridStack(50);
+        stack.push(startNode, ""); 
+
+        while (!stack.isEmpty()) {
+            try {
+                CompressedTrieNode curr = stack.topNode();
+                stack.pop();
+
+                if (curr.isEndOfWord) {
+                    totalImp += curr.importance;
+                    count++;
+                }
+
+                Edge[] edges = curr.getAllEdges();
+                if (edges != null) {
+                    for (int i = 0; i < edges.length; i++) {
+                        Edge e = edges[i];
+                        if (e != null && e.occupied) {
+                            stack.push(e.child, "");
+                        }
+                    }
+                }
+            } catch (Exception e) { 
+                // kati kako
+            }
+        }
+
+        if (count == 0) return 0.0;
+        return (double) totalImp / count;
+    }
+
+    public double getAverageFrequency(String prefix) {
+        CompressedTrieNode node = getNode(prefix);
+        if (node == null) return 0.0;
+        return getSubtreeAverage(node);
+    }
+
+    public void predictNextLetter(String prefix) {
+        CompressedTrieNode rootOfPrefix = getNode(prefix);
+        
+        if (rootOfPrefix == null) {
+            System.out.println("skata me piesi");
+            return;
+        }
+
+        Edge[] children = rootOfPrefix.getAllEdges();
+        if (children == null) {
+            System.out.println("kati prepi na kami analogos interface");
+            return;
+        }
+
+        char bestChar = '\0';
+        double maxAverage = -1.0;
+
+        for (int i = 0; i < children.length; i++) {
+            Edge e = children[i];
+            
+            if (e != null && e.occupied) {
+                double subAvg = getSubtreeAverage(e.child);
+                
+                char nextChar = e.label.charAt(0);
+
+                if (subAvg > maxAverage) {
+                    maxAverage = subAvg;
+                    bestChar = nextChar;
+                }
+            }
+        }
+
+        if (maxAverage != -1.0) {
+            System.out.println("O kostis en gay: " + bestChar);
+        } else {
+            System.out.println("o kostis den einai gay");
+        }
     }
 
     public static void main(String[] args) {
