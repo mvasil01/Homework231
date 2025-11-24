@@ -39,13 +39,12 @@ public class AutocompleteApp {
         AutocompleteApp app = new AutocompleteApp();
         app.loadDictionary(args[0]);
 
-        // simple check (not Step 3 yet)
         System.out.println("Sample search test:");
         System.out.println("Contains 'apple'? " + app.trie.search("apple"));
         System.out.println("Contains 'banana'? " + app.trie.search("banana"));
-        System.out.println("Contains 'table'? " + app.trie.search("apple"));
-        System.out.println("Contains 'user'? " + app.trie.search("banana"));
-        System.out.println("Contains 'test'? " + app.trie.search("apple"));
-        System.out.println("Contains 'banana'? " + app.trie.search("banana"));
+        System.out.println("Contains 'table'? " + app.trie.search("table"));
+        System.out.println("Contains 'user'? " + app.trie.search("user"));
+        System.out.println("Contains 'test'? " + app.trie.search("test"));
+        System.out.println("Contains 'world'? " + app.trie.search("world"));
     }
 }
