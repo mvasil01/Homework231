@@ -133,4 +133,8 @@ public class RobinHoodHashing{
         }
         
     }
+
+    public Edge[] getTable() {
+        return hashTable;
+    }
 }

@@ -21,6 +21,11 @@ public class CompressedTrieNode{
         return edgeList.getEdge(c);
     }
 
+    public Edge[] getAllEdges() {
+        return edgeList.getTable();
+    }
+
+
     public static void main(String[] args) {
 
         // Create a CompressedTrieNode (this will be our parent node)

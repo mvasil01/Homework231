@@ -148,6 +148,56 @@ public class CompressedTrie {
         return null;
     }
 
+    private void collectTopK(CompressedTrieNode node, String prefix, MinHeap heap, int k){
+        if(node == null) return;
+
+        if(node.isEndOfWord){
+            int imp = node.importance;
+            WordFrequency wf = new WordFrequency(prefix, imp);
+
+            if(heap.size() < k){
+                heap.insert(wf);
+            }
+            else{
+                WordFrequency min = heap.getMin();
+                if(min != null && imp > min.importance){
+                    heap.removeMin();
+                    heap.insert(wf);
+                }
+            }
+        }
+
+        Edge[] edges = node.getAllEdges();
+        if(edges == null) return;
+
+        for(Edge e : edges){
+            if(e != null && e.occupied){
+                String newPrefix = prefix + e.label;
+                collectTopK(e.child, newPrefix, heap, k);
+            }
+        }
+    }
+
+    public WordFrequency[] getTopK(String prefix, int k){
+        if(k <= 0){
+            return new WordFrequency[0];
+        }
+
+        prefix = prefix.toLowerCase();
+        CompressedTrieNode node = getNode(prefix);
+        if(node == null){
+            return new WordFrequency[0];
+        }
+
+        MinHeap heap = new MinHeap(k);
+
+        collectTopK(node, prefix, heap, k);
+
+        WordFrequency[] result = heap.toArray();
+        HeapSort.sort(result);
+        return result;
+    }
+
     public static void main(String[] args) {
 
         CompressedTrie trie = new CompressedTrie();
