@@ -1,7 +1,5 @@
 apple
 banana
-Cat
-carton
-TeSt
+java
 hello
 world
