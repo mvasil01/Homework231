@@ -5,13 +5,11 @@ import java.util.Scanner;
 import java.util.StringTokenizer;
 
 public class AutocompleteApp {
-    /*private CompressedTrie trie;
+    private CompressedTrie trie;
 
     public AutocompleteApp() {
         trie = new CompressedTrie();
     }
-
-    // ----------------- FILE LOADING -----------------
 
     public void loadDictionary(String dictionaryFile) {
         try {
@@ -32,7 +30,6 @@ public class AutocompleteApp {
         }
     }
 
-    // same cleanToken logic as in DictionaryLoader
     private String cleanToken(String token) {
         if (token == null) {
             return null;
@@ -41,7 +38,7 @@ public class AutocompleteApp {
         int start = 0;
         int end = token.length() - 1;
 
-        String punct = ".:!?\\\"'()[]{}";
+        String punct = ".,;:!?\\\"'()[]{}";
 
         while (start <= end && punct.indexOf(token.charAt(start)) != -1) {
             start++;
@@ -92,8 +89,6 @@ public class AutocompleteApp {
             System.out.println("Error reading text file: " + e.getMessage());
         }
     }
-
-    // ----------------- INTERACTIVE MENU -----------------
 
     public void runMenu() {
         Scanner sc = new Scanner(System.in);
@@ -212,8 +207,6 @@ public class AutocompleteApp {
         System.out.println("Word \"" + word + "\" found? " + found);
     }
 
-    // ----------------- MAIN -----------------
-
     public static void main(String[] args) {
         if (args.length < 2) {
             System.out.println("Usage: java AutocompleteApp <dictionary_file> <text_file>");
@@ -222,14 +215,8 @@ public class AutocompleteApp {
 
         AutocompleteApp app = new AutocompleteApp();
 
-        // 1) Load dictionary words into trie
         app.loadDictionary(args[0]);
-
-        // 2) Update frequencies based on text corpus
         app.updateFrequenciesFromText(args[1]);
-
-        // 3) Start interactive menu
         app.runMenu();
-    }*/
+    }
 }
-
