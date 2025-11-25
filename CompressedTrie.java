@@ -369,15 +369,16 @@ public class CompressedTrie {
 
     public double getAverageFrequency(String prefix) {
         if(prefix == null) return -1;
+        prefix = prefix.toLowerCase();
         CompressedTrieNode node = getNode(prefix.toLowerCase());
         if (node == null) return 0.0;
         return getSubtreeAverage(node);
     }
 
     public char predictNextLetter(String prefix) {
-        prefix = prefix.toLowerCase();
         CompressedTrieNode rootOfPrefix = getNode(prefix);
-        
+        prefix = prefix.toLowerCase();
+
         if (rootOfPrefix == null) {
             System.out.println("No words start with \"" + prefix + "\".");
             return '\0';
@@ -407,8 +408,6 @@ public class CompressedTrie {
         }
         if (maxAverage == -1.0 || bestChar == '\0') {
             System.out.println("No next letter can be predicted.");
-        } else {
-            System.out.println("Predicted next letter after \"" + prefix + "\": '" + bestChar + "'");
         }
         return bestChar;
     }
