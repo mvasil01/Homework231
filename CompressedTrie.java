@@ -221,15 +221,14 @@ public class CompressedTrie {
 
                 Edge[] edges = curr.getAllEdges();
                 if (edges != null) {
-                    for (int i = 0; i < edges.length; i++) {
-                        Edge e = edges[i];
+                    for (Edge e : edges) {
                         if (e != null && e.occupied) {
                             stack.push(e.child, "");
                         }
                     }
                 }
             } catch (Exception e) { 
-                // kati kako
+                System.out.println("Failed to pop from the stack! ");
             }
         }
 
@@ -243,25 +242,23 @@ public class CompressedTrie {
         return getSubtreeAverage(node);
     }
 
-    public void predictNextLetter(String prefix) {
+    public char predictNextLetter(String prefix) {
+        prefix = prefix.toLowerCase();
         CompressedTrieNode rootOfPrefix = getNode(prefix);
         
         if (rootOfPrefix == null) {
-            System.out.println("skata me piesi");
-            return;
+            return '\0';
         }
 
         Edge[] children = rootOfPrefix.getAllEdges();
         if (children == null) {
-            System.out.println("kati prepi na kami analogos interface");
-            return;
+            return '\0';
         }
 
         char bestChar = '\0';
         double maxAverage = -1.0;
 
-        for (int i = 0; i < children.length; i++) {
-            Edge e = children[i];
+        for (Edge e : children) {
             
             if (e != null && e.occupied) {
                 double subAvg = getSubtreeAverage(e.child);
@@ -275,11 +272,7 @@ public class CompressedTrie {
             }
         }
 
-        if (maxAverage != -1.0) {
-            System.out.println("O kostis en gay: " + bestChar);
-        } else {
-            System.out.println("o kostis den einai gay");
-        }
+        return bestChar;
     }
 
     public static void main(String[] args) {
