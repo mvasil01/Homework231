@@ -375,7 +375,7 @@ public class CompressedTrie {
         return getSubtreeAverage(node);
     }
 
-    public char predictNextLetter(String prefix) {
+    /*public char predictNextLetter(String prefix) {
         CompressedTrieNode rootOfPrefix = getNode(prefix);
         prefix = prefix.toLowerCase();
 
@@ -410,7 +410,80 @@ public class CompressedTrie {
             System.out.println("No next letter can be predicted.");
         }
         return bestChar;
+    }*/
+   public char predictNextLetter(String prefix) {
+        if (prefix == null || prefix.isEmpty()) {
+            return '\0';
+        }
+
+        return predictNextLetterHelper(root, prefix.toLowerCase());
     }
+
+    private char predictNextLetterHelper(CompressedTrieNode current, String remaining) {
+        if (remaining.isEmpty()) {
+            // We are exactly at the node for the prefix.
+            Edge[] children = current.getAllEdges();
+            if (children == null) {
+                return '\0';  // no continuations
+            }
+
+            char bestChar = '\0';
+            double bestAvg = -1.0;
+
+            for (Edge e : children) {
+                if (e != null && e.occupied) {
+                    double subAvg = getSubtreeAverage(e.child);
+                    char nextChar = e.label.charAt(0);  // first char of that edge
+
+                    if (subAvg > bestAvg) {
+                        bestAvg = subAvg;
+                        bestChar = nextChar;
+                    }
+                }
+            }
+
+            return bestChar;
+        }
+
+        // We still have some of the prefix to consume
+        char c = remaining.charAt(0);
+        Edge edge = current.getEdgeByFirstChar(c);
+        if (edge == null) {
+            // No path with this prefix
+            return '\0';
+        }
+
+        String label = edge.label;
+        int common = commonPrefixLength(label, remaining);
+
+        if (common == 0) {
+            // diverging immediately: prefix not present
+            return '\0';
+        }
+
+        // Case 1: label is a full prefix of remaining -> go deeper
+        if (common == label.length() && common < remaining.length()) {
+            String rest = remaining.substring(common);
+            return predictNextLetterHelper(edge.child, rest);
+        }
+
+        // Case 2: prefix ends inside label (remaining shorter than label, but matches)
+        if (common == remaining.length() && common < label.length()) {
+            // Next character after the prefix is just the next char in the label
+            return label.charAt(common);
+        }
+
+        // Case 3: prefix exactly matches label -> we are at edge.child node
+        if (common == remaining.length() && common == label.length()) {
+            return predictNextLetterHelper(edge.child, "");
+        }
+
+        // Any other case means no valid continuation for this prefix
+        return '\0';
+    }
+
+
+
 
     public static void main(String[] args) {
 
