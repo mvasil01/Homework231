@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Autocomplete Web UI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1d3557, #457b9d);
+      color: #1d3557;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      background: #f1faee;
+      margin-top: 40px;
+      padding: 30px 28px;
+      border-radius: 16px;
+      box-shadow: 0 18px 35px rgba(0, 0, 0, 0.25);
+      width: 100%;
+      max-width: 680px;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 28px;
+      text-align: center;
+      color: #1d3557;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #457b9d;
+      margin-bottom: 20px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #e0e5ec;
+    }
+
+    .section:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .field-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 14px;
+      color: #1d3557;
+    }
+
+    input[type="text"], input[type="number"] {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #a8dadc;
+      flex: 1;
+      min-width: 0;
+      background: #fff;
+      font-size: 14px;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #457b9d;
+      box-shadow: 0 0 0 2px rgba(69, 123, 157, 0.25);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      background: #457b9d;
+      color: #f1faee;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+    }
+
+    button:hover {
+      background: #1d3557;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    button.secondary {
+      background: #a8dadc;
+      color: #1d3557;
+    }
+
+    button.secondary:hover {
+      background: #89c2d9;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 6px;
+      margin-top: 18px;
+      color: #1d3557;
+    }
+
+    #output {
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px 14px;
+      min-height: 80px;
+      border: 1px solid #dee2e6;
+      white-space: pre-wrap;
+      font-size: 13px;
+      color: #222;
+      overflow-x: auto;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #6c757d;
+      margin-top: 4px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #e9f5ff;
+      color: #1d3557;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <h1>Autocomplete</h1>
+    <div class="subtitle">
+      Compressed trie · Robin Hood hashing · frequency-based suggestions
+    </div>
+
+    <!-- Prefix-based actions -->
+    <div class="section">
+      <label for="prefix">
+        Prefix
+        <span class="pill">Type e.g. "ap", "ba", "car"</span>
+      </label>
+      <div class="field-row">
+        <input id="prefix" type="text" placeholder="Enter prefix...">
+        <input id="k" type="number" min="1" value="5" style="max-width:90px;" title="k">
+      </div>
+
+      <div class="btn-row">
+        <button onclick="doTopK()">Top-K suggestions</button>
+        <button class="secondary" onclick="doAvg()">Average frequency</button>
+        <button class="secondary" onclick="doNext()">Predict next letter</button>
+      </div>
+
+      <div class="hint">
+        Top-K uses your custom MinHeap + HeapSort.  
+        Average frequency and next letter are based on your importance counters.
+      </div>
+    </div>
+
+    <!-- Exact search -->
+    <div class="section">
+      <label for="word">
+        Exact word search
+      </label>
+      <div class="field-row">
+        <input id="word" type="text" placeholder="Enter full word (e.g. apple, banana)...">
+      </div>
+      <div class="btn-row">
+        <button onclick="doSearch()">Search word</button>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div>
+      <h2>Result</h2>
+      <pre id="output">Try a prefix (like "ap") and click one of the buttons above.</pre>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:8000";
+
+    function getK() {
+      const kInput = document.getElementById("k");
+      let k = parseInt(kInput.value, 10);
+      if (isNaN(k) || k <= 0) k = 5;
+      return k;
+    }
+
+    async function doTopK() {
+      const prefix = document.getElementById("prefix").value.trim();
+      const k = getK();
+      const out = document.getElementById("output");
+
+      if (!prefix) {
+        out.textContent = "Please enter a prefix first.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/topk?prefix=${encodeURIComponent(prefix)}&k=${k}`);
+        const data = await res.json();
+        if (data.length === 0) {
+          out.textContent = `No suggestions for "${prefix}".`;
+          return;
+        }
+        out.textContent =
+          `Top ${data.length} suggestions for "${prefix}":\n\n` +
+          data.map((wf, i) =>
+            `${i + 1}. ${wf.word}  (freq = ${wf.importance})`
+          ).join("\n");
+      } catch (e) {
+        out.textContent = "Error calling /topk: " + e;
+      }
+    }
+
+    async function doAvg() {
+      const prefix = document.getElementById("prefix").value.trim();
+      const out = document.getElementById("output");
+
+      if (!prefix) {
+        out.textContent = "Please enter a prefix first.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/avg?prefix=${encodeURIComponent(prefix)}`);
+        const text = await res.text();
+        const value = parseFloat(text);
+        if (isNaN(value)) {
+          out.textContent = `Average frequency for "${prefix}": (invalid response: ${text})`;
+        } else {
+          out.textContent = `Average frequency for words starting with "${prefix}": ${value.toFixed(2)}`;
+        }
+      } catch (e) {
+        out.textContent = "Error calling /avg: " + e;
+      }
+    }
+
+    async function doNext() {
+      const prefix = document.getElementById("prefix").value.trim();
+      const out = document.getElementById("output");
+
+      if (!prefix) {
+        out.textContent = "Please enter a prefix first.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/next?prefix=${encodeURIComponent(prefix)}`);
+        const text = await res.text();
+        if (!text) {
+          out.textContent = `No next-letter suggestion for "${prefix}".`;
+        } else {
+          out.textContent = `Suggested next letter after "${prefix}": '${text}'`;
+        }
+      } catch (e) {
+        out.textContent = "Error calling /next: " + e;
+      }
+    }
+
+    async function doSearch() {
+      const word = document.getElementById("word").value.trim();
+      const out = document.getElementById("output");
+
+      if (!word) {
+        out.textContent = "Please enter a word to search.";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/search?word=${encodeURIComponent(word)}`);
+        const text = await res.text();
+        const found = (text.trim() === "true");
+        out.textContent = `Word "${word}" found? ${found ? "✅ Yes" : "❌ No"}`;
+      } catch (e) {
+        out.textContent = "Error calling /search: " + e;
+      }
+    }
+  </script>
+</body>
+</html>
