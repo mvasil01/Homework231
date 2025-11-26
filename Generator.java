@@ -1,5 +1,3 @@
-
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -7,6 +5,7 @@ import java.util.Random;
 
 public class Generator {
 
+    // Standard English letter frequency approximation
     private static final String CHAR_FREQ = "eeeeeeeeettttttaaaaaaaaaoooooiiiiiinnnnnnssssssrrrrrrhhhhhhddddllluuucmmywfgpbvkxqjz";
     private static final Random random = new Random();
     
@@ -15,14 +14,17 @@ public class Generator {
     public static void main(String[] args) {
         System.out.println("Generating dictionaries...");
 
+        // 1. Fixed Length (Length 10 is safe from duplicates)
         String[] fixedWords = generateSameLength(MAX_N, 10);
         saveToFile("dictionary_fixed_length.txt", fixedWords);
-        System.out.println("-> Created dictionary_fixed.txt (" + MAX_N + " words)");
+        // FIX: Printed filename now matches actual filename
+        System.out.println("-> Created dictionary_fixed_length.txt (" + MAX_N + " words)");
 
+        // 2. Variable Length (Normal Distribution)
         String[] variableWords = generateNormal(MAX_N);
-        checkNormalDistribution(variableWords); // Verify the distribution here
+        checkNormalDistribution(variableWords); 
         saveToFile("dictionary_normal_distributed.txt", variableWords);
-        System.out.println("-> Created dictionary_variable.txt (" + MAX_N + " words)");
+        System.out.println("-> Created dictionary_normal_distributed.txt (" + MAX_N + " words)");
         
         System.out.println("Done.");
     }
@@ -33,7 +35,7 @@ public class Generator {
             return;
         }
 
-        int[] lengthCounts = new int[20]; 
+        int[] lengthCounts = new int[30]; // Increased size just in case
         long totalLength = 0;
         long totalLengthSq = 0;
         int minLen = Integer.MAX_VALUE;
@@ -57,14 +59,12 @@ public class Generator {
 
         System.out.println("\n=== Normal Distribution Check ===");
         System.out.printf("Total Words: %d%n", words.length);
-        System.out.printf("Mean Length: %.2f (Expected ~8.0)%n", mean);
-        System.out.printf("Std Dev:     %.2f (Expected ~3.0)%n", stdDev);
+        System.out.printf("Mean Length: %.2f (Expected ~11.0)%n", mean);
+        System.out.printf("Std Dev:     %.2f (Expected ~4.0)%n", stdDev);
         System.out.println("Length Histogram:");
 
         int maxCount = 0;
-        for (int c : lengthCounts) {
-            if (c > maxCount) maxCount = c;
-        }
+        for (int c : lengthCounts) maxCount = Math.max(maxCount, c);
 
         for (int i = minLen; i <= maxLen; i++) {
             int count = lengthCounts[i];
@@ -100,10 +100,16 @@ public class Generator {
     public static String[] generateNormal(int n) {
         String[] words = new String[n];
         for (int i = 0; i < n; i++) {
-            int len = (int) (random.nextGaussian() * 3 + 8);
+            // FIX: 
+            // 1. Shifted Mean to 11 to avoid short-word collisions (length 2-3)
+            // 2. Increased StdDev to 4 for a wider spread
+            // 3. Used Math.round to avoid flooring bias
+            double val = random.nextGaussian() * 4 + 11;
+            int len = (int) Math.round(val);
             
-            if (len < 2) len = 2;
-            if (len > 15) len = 15;
+            // Safe clamping
+            if (len < 4) len = 4;   // Minimum 4 avoids most collisions
+            if (len > 20) len = 20;
             
             words[i] = generateWord(len);
         }
