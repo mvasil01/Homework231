@@ -132,10 +132,10 @@ public class Trie {
     }
 
     // ==========================================
-    // ===  MEMORY ESTIMATION (For Part B)    ===
+    // ===  MEMORY ESTIMATION (Theoretical)   ===
     // ==========================================
     public long estimateMemory() {
-        long size = 16 + 8; // Trie Object Overhead(16) + root Ref(8)
+        long size = 16 + 8; // Trie Object Overhead (16) + root Ref (8)
         if (root != null) {
             size += measureNode(root);
         }
@@ -143,14 +143,15 @@ public class Trie {
     }
 
     private long measureNode(TrieNode node) {
-        // TrieNode Object: Header(16) + ChildrenRef(8) + boolean(1)
-        long size = 16 + 8 + 1;
+        // 1. Node Object: Header(16) + children Ref(8) + boolean(1)
+        long size = 25; 
 
-        // Children Array: Header(16) + 26 * Ref(8)
-        // We can access 'node.children' directly because TrieNode is an inner class
+        // 2. Children Array: Header(16) + 26 * Ref(8)
+        // Even if null, the array object exists if initialized in constructor
         if (node.children != null) {
-            size += 16 + (node.children.length * 8);
+            size += 16 + (26 * 8); 
 
+            // 3. Recursive children
             for (TrieNode child : node.children) {
                 if (child != null) {
                     size += measureNode(child);
@@ -159,7 +160,6 @@ public class Trie {
         }
         return size;
     }
-
     // Test program
     public static void main(String[] args) {
         Trie trie = new Trie();

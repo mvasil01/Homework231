@@ -137,4 +137,31 @@ public class RobinHoodHashing{
     public Edge[] getTable() {
         return hashTable;
     }
+
+    public long estimateMemory() {
+        // 1. RobinHood Object: Header(16) + 2 Refs(16) + 4 ints(16)
+        long size = 48;
+
+        // 2. PRIMES Array: Header(16) + 6 ints(24)
+        size += 40; 
+
+        // 3. HashTable Array: Header(16) + Capacity * Ref(8)
+        size += 16 + (capacity * 8L);
+
+        // 4. Measure Edges (Only occupied ones)
+        for (Edge e : hashTable) {
+            if (e != null) {
+                // Edge Object: Header(16) + 2 Refs(16) + boolean(1)
+                size += 33;
+
+                // String Label: Header(16) + value Ref(8) + hash(4) = 28
+                // Char Array: Header(16) + length * 2 bytes
+                if (e.label != null) {
+                    size += 28 + 16 + (e.label.length() * 2L);
+                }
+                
+            }
+        }
+        return size;
+    }
 }
