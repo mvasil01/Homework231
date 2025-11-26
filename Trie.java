@@ -131,6 +131,35 @@ public class Trie {
         return !node.isEndOfWord && hasNoChildren(node);
     }
 
+    // ==========================================
+    // ===  MEMORY ESTIMATION (For Part B)    ===
+    // ==========================================
+    public long estimateMemory() {
+        long size = 16 + 8; // Trie Object Overhead(16) + root Ref(8)
+        if (root != null) {
+            size += measureNode(root);
+        }
+        return size;
+    }
+
+    private long measureNode(TrieNode node) {
+        // TrieNode Object: Header(16) + ChildrenRef(8) + boolean(1)
+        long size = 16 + 8 + 1;
+
+        // Children Array: Header(16) + 26 * Ref(8)
+        // We can access 'node.children' directly because TrieNode is an inner class
+        if (node.children != null) {
+            size += 16 + (node.children.length * 8);
+
+            for (TrieNode child : node.children) {
+                if (child != null) {
+                    size += measureNode(child);
+                }
+            }
+        }
+        return size;
+    }
+
     // Test program
     public static void main(String[] args) {
         Trie trie = new Trie();

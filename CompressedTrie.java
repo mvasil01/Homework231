@@ -483,7 +483,60 @@ public class CompressedTrie {
     }
 
 
+    // ==========================================
+    // ===  MEMORY ESTIMATION (For Part B)    ===
+    // ==========================================
+    public long estimateMemory() {
+        long size = 16 + 8; // CompressedTrie Object Overhead(16) + root Ref(8)
+        if (root != null) {
+            size += measureNode(root);
+        }
+        return size;
+    }
 
+    private long measureNode(CompressedTrieNode node) {
+        // CompressedTrieNode: Header(16) + EdgeListRef(8) + boolean(1) + int(4)
+        long size = 16 + 8 + 1 + 4;
+
+        // RobinHoodHashing Object Overhead (Estimated)
+        // Header(16) + TableRef(8) + PrimesRef(8) + 5 ints(20)
+        size += 16 + 8 + 8 + 20; 
+        
+        // PRIMES[] array inside RobinHood (Header + 6 ints)
+        size += 16 + 24;
+
+        // Access internal edge array via your public getter
+        Edge[] table = node.getAllEdges();
+        if (table != null) {
+            // The HashTable Array Object: Header(16) + Length * Ref(8)
+            size += 16 + (table.length * 8);
+
+            for (Edge e : table) {
+                if (e != null) {
+                    size += measureEdge(e);
+                }
+            }
+        }
+        return size;
+    }
+
+    private long measureEdge(Edge edge) {
+        // Edge Object: Header(16) + LabelRef(8) + ChildRef(8) + boolean(1)
+        long size = 16 + 8 + 8 + 1;
+
+        // Label String Memory
+        if (edge.label != null) {
+            // String Object(16+8+4) + CharArrayHeader(16) + chars(len*2)
+            size += 16 + 8 + 4; 
+            size += 16 + (edge.label.length() * 2);
+        }
+
+        // Recursive child
+        if (edge.child != null) {
+            size += measureNode(edge.child);
+        }
+        return size;
+    }
 
     public static void main(String[] args) {
 
