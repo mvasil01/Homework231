@@ -162,12 +162,13 @@
       margin-left: 6px;
     }
 
-    /* Live suggestions dropdown */
-
+    /* Wrappers for dropdown positioning */
     .prefix-wrapper {
       position: relative;
       width: 100%;
     }
+
+    /* Live suggestions dropdown */
 
     .suggestions {
       position: absolute;
@@ -255,7 +256,7 @@
           <input id="k" type="number" min="1" value="5" style="max-width:90px;" title="k">
         </div>
 
-        <!-- live suggestions dropdown -->
+        <!-- live suggestions dropdown for prefix -->
         <div id="suggestions" class="suggestions hidden"></div>
       </div>
 
@@ -266,7 +267,7 @@
       </div>
 
       <div class="hint">
-        As you type, the dropdown shows the top-K suggestions and the predicted next letter.  
+        As you type in the prefix field, the dropdown shows the top-K suggestions and the predicted next letter.  
         Buttons still work and use the same backend endpoints.
       </div>
     </div>
@@ -274,13 +275,20 @@
     <!-- Exact search -->
     <div class="section">
       <label for="word">
-        Exact word search
+        Exact word search (with suggestions)
       </label>
-      <div class="field-row">
-        <input id="word" type="text" placeholder="Enter full word (e.g. apple, banana)...">
+      <div class="prefix-wrapper">
+        <div class="field-row">
+          <input id="word" type="text" placeholder="Enter full word (e.g. apple, banana)...">
+        </div>
+        <!-- live suggestions dropdown for word search -->
+        <div id="suggestions-word" class="suggestions hidden"></div>
       </div>
       <div class="btn-row">
         <button onclick="doSearch()">Search word</button>
+      </div>
+      <div class="hint">
+        As you type in the word field, you’ll also see suggestions below it (using the same top-K logic).
       </div>
     </div>
 
@@ -296,13 +304,22 @@
 
     const prefixInput = document.getElementById("prefix");
     const suggestionsBox = document.getElementById("suggestions");
+    const wordInput = document.getElementById("word");
+    const suggestionsBoxWord = document.getElementById("suggestions-word");
     const output = document.getElementById("output");
 
-    let liveTimeout = null;          // debounce timer
+    // State for prefix dropdown
+    let liveTimeout = null;          // debounce timer for prefix
     let suggestionsData = [];        // current array of {word, importance}
     let suggestionsPrefix = "";      // current prefix for dropdown
     let suggestionsNextLetter = "";  // current predicted next letter
-    let selectedIndex = -1;          // keyboard-selected index
+    let selectedIndex = -1;          // keyboard-selected index (prefix)
+
+    // State for word dropdown
+    let liveTimeoutWord = null;      // debounce timer for word input
+    let suggestionsDataWord = [];    // array of {word, importance}
+    let suggestionsPrefixWord = "";  // current prefix in word field
+    let selectedIndexWord = -1;      // keyboard-selected index (word)
 
     function getK() {
       const kInput = document.getElementById("k");
@@ -318,6 +335,14 @@
       suggestionsPrefix = "";
       suggestionsNextLetter = "";
       selectedIndex = -1;
+    }
+
+    function hideSuggestionsWord() {
+      suggestionsBoxWord.classList.add("hidden");
+      suggestionsBoxWord.innerHTML = "";
+      suggestionsDataWord = [];
+      suggestionsPrefixWord = "";
+      selectedIndexWord = -1;
     }
 
     function renderSuggestions() {
@@ -355,7 +380,7 @@
             <span class="prefix-part">${pre}</span><span class="suffix-part">${suf}</span>
           `;
         } else {
-          // fallback in weird cases
+          // fallback
           wordHtml = `<span class="word">${word}</span>`;
         }
 
@@ -372,7 +397,7 @@
       suggestionsBox.innerHTML = html;
       suggestionsBox.classList.remove("hidden");
 
-      // Click handler for items
+      // Click handler for items (prefix)
       Array.from(suggestionsBox.querySelectorAll(".suggestion-item")).forEach(item => {
         item.addEventListener("click", () => {
           const idx = parseInt(item.getAttribute("data-index"), 10);
@@ -380,7 +405,60 @@
             const word = suggestionsData[idx].word;
             prefixInput.value = word;
             hideSuggestions();
-            output.textContent = `Selected suggestion: "${word}"`;
+            output.textContent = `Selected suggestion from prefix box: "${word}"`;
+          }
+        });
+      });
+    }
+
+    function renderSuggestionsWord() {
+      if (!suggestionsDataWord || suggestionsDataWord.length === 0) {
+        hideSuggestionsWord();
+        return;
+      }
+
+      const prefix = suggestionsPrefixWord;
+      const lowerPrefix = prefix.toLowerCase();
+
+      let html = "";
+
+      suggestionsDataWord.forEach((wf, i) => {
+        const word = wf.word;
+        const lowerWord = word.toLowerCase();
+
+        let wordHtml;
+        if (lowerWord.startsWith(lowerPrefix)) {
+          const pre = word.substring(0, prefix.length);
+          const suf = word.substring(prefix.length);
+          wordHtml = `
+            <span class="prefix-part">${pre}</span><span class="suffix-part">${suf}</span>
+          `;
+        } else {
+          wordHtml = `<span class="word">${word}</span>`;
+        }
+
+        const selectedClass = (i === selectedIndexWord) ? " selected" : "";
+
+        html += `
+          <div class="suggestion-item${selectedClass}" data-index="${i}">
+            <div>${wordHtml}</div>
+            <span class="freq">freq = ${wf.importance}</span>
+          </div>
+        `;
+      });
+
+      suggestionsBoxWord.innerHTML = html;
+      suggestionsBoxWord.classList.remove("hidden");
+
+      // Click handler for word suggestions
+      Array.from(suggestionsBoxWord.querySelectorAll(".suggestion-item")).forEach(item => {
+        item.addEventListener("click", () => {
+          const idx = parseInt(item.getAttribute("data-index"), 10);
+          if (!isNaN(idx) && suggestionsDataWord[idx]) {
+            const word = suggestionsDataWord[idx].word;
+            wordInput.value = word;
+            hideSuggestionsWord();
+            output.textContent = `Selected word suggestion: "${word}"`;
           }
         });
       });
@@ -394,10 +472,16 @@
       renderSuggestions();
     }
 
+    function showSuggestionsWord(data, prefix) {
+      suggestionsDataWord = data || [];
+      suggestionsPrefixWord = prefix || "";
+      selectedIndexWord = -1;
+      renderSuggestionsWord();
+    }
+
     async function fetchSuggestions(prefix) {
       const k = getK();
       try {
-        // Call /topk and /next in parallel
         const [resTopK, resNext] = await Promise.all([
           fetch(`${API_BASE}/topk?prefix=${encodeURIComponent(prefix)}&k=${k}`),
           fetch(`${API_BASE}/next?prefix=${encodeURIComponent(prefix)}`)
@@ -407,8 +491,7 @@
         const nextLetterText = await resNext.text();
         const nextLetter = nextLetterText && nextLetterText !== "\0" ? nextLetterText : "";
 
-        // If user changed input while we were fetching, don't override
-        if (prefixInput.value.trim() !== prefix) return;
+        if (prefixInput.value.trim() !== prefix) return; // user changed
 
         showSuggestions(data, prefix, nextLetter);
       } catch (e) {
@@ -417,7 +500,22 @@
       }
     }
 
-    // Live update handler with debounce
+    async function fetchSuggestionsWord(prefix) {
+      const k = getK();
+      try {
+        const res = await fetch(`${API_BASE}/topk?prefix=${encodeURIComponent(prefix)}&k=${k}`);
+        const data = await res.json();
+
+        if (wordInput.value.trim() !== prefix) return;
+
+        showSuggestionsWord(data, prefix);
+      } catch (e) {
+        console.error("Error fetching word suggestions:", e);
+        hideSuggestionsWord();
+      }
+    }
+
+    // Live update handler with debounce for prefix
     prefixInput.addEventListener("input", () => {
       const prefix = prefixInput.value.trim();
 
@@ -427,17 +525,31 @@
         return;
       }
 
-      // basic debounce: wait 200ms after typing stops
       if (liveTimeout) clearTimeout(liveTimeout);
       liveTimeout = setTimeout(() => {
         fetchSuggestions(prefix);
       }, 200);
     });
 
-    // Keyboard navigation: ↑, ↓, Enter, Esc
+    // Live update handler with debounce for word input
+    wordInput.addEventListener("input", () => {
+      const prefix = wordInput.value.trim();
+
+      if (!prefix) {
+        hideSuggestionsWord();
+        return;
+      }
+
+      if (liveTimeoutWord) clearTimeout(liveTimeoutWord);
+      liveTimeoutWord = setTimeout(() => {
+        fetchSuggestionsWord(prefix);
+      }, 200);
+    });
+
+    // Keyboard navigation: ↑, ↓, Enter, Esc for prefix input
     prefixInput.addEventListener("keydown", (e) => {
       if (suggestionsBox.classList.contains("hidden") || suggestionsData.length === 0) {
-        return; // nothing to navigate
+        return;
       }
 
       if (e.key === "ArrowDown") {
@@ -445,7 +557,7 @@
         if (selectedIndex < suggestionsData.length - 1) {
           selectedIndex++;
         } else {
-          selectedIndex = 0; // wrap
+          selectedIndex = 0;
         }
         renderSuggestions();
       } else if (e.key === "ArrowUp") {
@@ -453,7 +565,7 @@
         if (selectedIndex > 0) {
           selectedIndex--;
         } else {
-          selectedIndex = suggestionsData.length - 1; // wrap
+          selectedIndex = suggestionsData.length - 1;
         }
         renderSuggestions();
       } else if (e.key === "Enter") {
@@ -462,11 +574,62 @@
           const word = suggestionsData[selectedIndex].word;
           prefixInput.value = word;
           hideSuggestions();
-          output.textContent = `Selected suggestion: "${word}"`;
+          output.textContent = `Selected suggestion from prefix box: "${word}"`;
         }
       } else if (e.key === "Escape") {
         e.preventDefault();
         hideSuggestions();
+      }
+    });
+
+    // Keyboard navigation: ↑, ↓, Enter, Esc for word input
+    wordInput.addEventListener("keydown", (e) => {
+      if (suggestionsBoxWord.classList.contains("hidden") || suggestionsDataWord.length === 0) {
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (selectedIndexWord < suggestionsDataWord.length - 1) {
+          selectedIndexWord++;
+        } else {
+          selectedIndexWord = 0;
+        }
+        renderSuggestionsWord();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (selectedIndexWord > 0) {
+          selectedIndexWord--;
+        } else {
+          selectedIndexWord = suggestionsDataWord.length - 1;
+        }
+        renderSuggestionsWord();
+      } else if (e.key === "Enter") {
+        if (selectedIndexWord >= 0 && selectedIndexWord < suggestionsDataWord.length) {
+          e.preventDefault();
+          const word = suggestionsDataWord[selectedIndexWord].word;
+          wordInput.value = word;
+          hideSuggestionsWord();
+          output.textContent = `Selected word suggestion: "${word}"`;
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        hideSuggestionsWord();
+      }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", (e) => {
+      const isClickInsidePrefix = prefixInput.contains(e.target);
+      const isClickInsidePrefixDropdown = suggestionsBox.contains(e.target);
+      const isClickInsideWord = wordInput.contains(e.target);
+      const isClickInsideWordDropdown = suggestionsBoxWord.contains(e.target);
+
+      if (!isClickInsidePrefix && !isClickInsidePrefixDropdown) {
+        hideSuggestions();
+      }
+      if (!isClickInsideWord && !isClickInsideWordDropdown) {
+        hideSuggestionsWord();
       }
     });
 
@@ -542,7 +705,7 @@
     }
 
     async function doSearch() {
-      const word = document.getElementById("word").value.trim();
+      const word = wordInput.value.trim();
 
       if (!word) {
         output.textContent = "Please enter a word to search.";
