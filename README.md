@@ -185,7 +185,7 @@ All algorithms written manually without using Java collections for trie/hashing/
 
 Authors:
     Markos Vasili   UC1376829
-    Ioannis Charalampous
+    Ioannis Charalampous    UC1367186
 
 ---
 
