@@ -38,50 +38,65 @@ def create_plot(n_vals, t_mem, c_mem, title, output_filename, x_lim, y_lim, x_bu
              markerfacecolor='black', 
              label='Compressed Trie')
 
-    plt.title(title, fontsize=14)
+    # === TITLE MOVED TO BOTTOM ===
+    # y=-0.25 puts the title below the X-axis label
+    plt.title(title, fontsize=14, y=-0.25)
+    
+    # Labels
     plt.xlabel('Dictionary Size (N)', fontsize=12)
     plt.ylabel('Memory Usage (MB)', fontsize=12)
     
-    # === LINEAR AXIS ===
-    # Use real N values for X-axis to show true linear relationship.
-    # Set limits to include a small negative buffer so (0,0) isn't on the edge.
+    # === LEGEND BACK TO NORTH WEST ===
+    # loc='upper left' places it inside the box, top-left corner
+    plt.legend(loc='upper left')
+    
+    # Axis Limits
     plt.xlim(-x_buf, x_lim)
     plt.ylim(-y_buf, y_lim)
-    
-    # Place Legend in North West (Upper Left)
-    plt.legend(loc='upper left')
     
     plt.ticklabel_format(style='plain', axis='both', useOffset=False)
     plt.grid(True, linestyle='--', alpha=0.7)
     
-    # Save as JPEG with tight bounding box
-    plt.savefig(output_filename, dpi=300, bbox_inches='tight', pad_inches=0.05)
+    # Save as JPEG (bbox_inches='tight' ensures the bottom title isn't cut off)
+    plt.savefig(output_filename, dpi=300, bbox_inches='tight', pad_inches=0.1)
     plt.close()
     print(f"Created {output_filename}")
 
 # --- Main Execution ---
-n1, t1, c1 = read_data('results_fixed_length.txt')
-n2, t2, c2 = read_data('results_variable_length.txt')
 
-# Calculate Global Limits and Buffers
-all_mem = t1 + c1 + t2 + c2
-all_n = n1 + n2
+files = [
+    ('results_fixed_7.txt', 'Fixed Word Length: 7'),
+    ('results_fixed_10.txt', 'Fixed Word Length: 10'),
+    ('results_fixed_31.txt', 'Fixed Word Length: 31'),
+    ('results_variable.txt', 'Normally Distributed Word Lengths')
+]
 
-if all_mem and all_n:
-    # Max limits with 5% top/right padding
-    global_max_y = max(all_mem) * 1.05 
-    global_max_x = max(all_n) * 1.05
+data_store = {}
+all_mem_values = []
+all_n_values = []
+
+# Read all data
+for fname, title in files:
+    n, t, c = read_data(fname)
+    if n:
+        data_store[fname] = (n, t, c, title)
+        all_mem_values.extend(t + c)
+        all_n_values.extend(n)
+
+# Global Limits
+if all_mem_values and all_n_values:
+    global_max_y = max(all_mem_values) * 1.05
+    global_max_x = max(all_n_values) * 1.05
     
-    # Negative buffer (2% of range) for breathing room at origin
     x_pad = global_max_x * 0.02
     y_pad = global_max_y * 0.02
 
-    create_plot(n1, t1, c1, 
-                'Memory Comparison: Fixed Length Words', 
-                'plot_fixed_length.jpg', 
-                global_max_x, global_max_y, x_pad, y_pad)
-
-    create_plot(n2, t2, c2, 
-                'Memory Comparison: Variable Length Words', 
-                'plot_variable_length.jpg', 
-                global_max_x, global_max_y, x_pad, y_pad)
+    # Generate Plots
+    for fname, (n, t, c, title) in data_store.items():
+        clean_name = fname.replace("results_", "").replace(".txt", "")
+        out_name = "plot_" + clean_name + ".jpg"
+        
+        create_plot(n, t, c, 
+                    title, 
+                    out_name, 
+                    global_max_x, global_max_y, x_pad, y_pad)

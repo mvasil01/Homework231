@@ -10,27 +10,41 @@ public class Generator {
     
     // The dictionary sizes required by the assignment
     private static final int[] SIZES = {1000, 10000, 50000, 100000, 200000};
+    
+    // The specific fixed lengths you requested
+    private static final int[] FIXED_LENGTHS = {7, 10, 31};
 
     public static void main(String[] args) {
         System.out.println("Generating dictionaries...");
 
         for (int n : SIZES) {
-            // --- 1. Fixed Length (Length 10) ---
-            String fixedName = "dictionary_fixed_" + n + ".txt";
-            String[] fixedWords = generateSameLength(n, 10);
-            saveToFile(fixedName, fixedWords);
-            System.out.println("-> Created " + fixedName);
+            System.out.println("Processing N = " + n + "...");
+            
+            // --- 1. Fixed Length Dictionaries (7, 10, 31) ---
+            for (int len : FIXED_LENGTHS) {
+                // Set deterministic seed based on N and Length
+                random.setSeed(n * len * 12345L); 
+                
+                String fixedName = "dictionary_fixed_" + len + "_" + n + ".txt";
+                String[] fixedWords = generateSameLength(n, len);
+                
+                saveToFile(fixedName, fixedWords);
+                System.out.println("  -> Created " + fixedName);
+            }
 
             // --- 2. Variable Length (Normal Distribution) ---
+            // Set deterministic seed independent of the fixed loop
+            random.setSeed(n * 67890L); 
+            
             String normName = "dictionary_normal_" + n + ".txt";
             String[] variableWords = generateNormal(n);
             
             // Visual Check for EVERY dictionary size
-            System.out.println("\n--- Visual Check for N=" + n + " ---");
+            System.out.println("\n  [Visual Check for Normal Dist (N=" + n + ")]");
             checkNormalDistribution(variableWords);
             
             saveToFile(normName, variableWords);
-            System.out.println("-> Created " + normName);
+            System.out.println("  -> Created " + normName);
             System.out.println("--------------------------------------------------");
         }
         
@@ -43,7 +57,7 @@ public class Generator {
             return;
         }
 
-        int[] lengthCounts = new int[30]; 
+        int[] lengthCounts = new int[40]; // Increased buffer for longer words if needed
         long totalLength = 0;
         long totalLengthSq = 0;
         int minLen = Integer.MAX_VALUE;
@@ -65,22 +79,22 @@ public class Generator {
         double variance = ((double) totalLengthSq / words.length) - (mean * mean);
         double stdDev = Math.sqrt(variance);
 
-        System.out.printf("Stats: Mean=%.2f (Target ~11.0) | StdDev=%.2f | Range=[%d, %d]%n", 
+        System.out.printf("  Stats: Mean=%.2f (Target ~11.0) | StdDev=%.2f | Range=[%d, %d]%n", 
                           mean, stdDev, minLen, maxLen);
-        System.out.println("Histogram:");
+        System.out.println("  Histogram:");
 
         int maxCount = 0;
         for (int c : lengthCounts) maxCount = Math.max(maxCount, c);
 
         for (int i = minLen; i <= maxLen; i++) {
+            if (i >= lengthCounts.length) break;
             int count = lengthCounts[i];
-            // Normalize bar length to max 40 chars
             int barLen = (maxCount == 0) ? 0 : (int) ((double) count / maxCount * 40); 
             
             StringBuilder bar = new StringBuilder();
             for (int k = 0; k < barLen; k++) bar.append("*");
             
-            System.out.printf("%2d | %-40s (%d)%n", i, bar.toString(), count);
+            System.out.printf("  %2d | %-40s (%d)%n", i, bar.toString(), count);
         }
         System.out.println();
     }
@@ -107,7 +121,6 @@ public class Generator {
     public static String[] generateNormal(int n) {
         String[] words = new String[n];
         for (int i = 0; i < n; i++) {
-            // Mean ~11, StdDev ~4
             double val = random.nextGaussian() * 4 + 11;
             int len = (int) Math.round(val);
             
