@@ -5,28 +5,36 @@ import java.util.Random;
 
 public class Generator {
 
-    // Standard English letter frequency approximation
     private static final String CHAR_FREQ = "eeeeeeeeettttttaaaaaaaaaoooooiiiiiinnnnnnssssssrrrrrrhhhhhhddddllluuucmmywfgpbvkxqjz";
     private static final Random random = new Random();
     
-    private static final int MAX_N = 200000; 
+    // The dictionary sizes required by the assignment
+    private static final int[] SIZES = {1000, 10000, 50000, 100000, 200000};
 
     public static void main(String[] args) {
         System.out.println("Generating dictionaries...");
 
-        // 1. Fixed Length (Length 10 is safe from duplicates)
-        String[] fixedWords = generateSameLength(MAX_N, 10);
-        saveToFile("dictionary_fixed_length.txt", fixedWords);
-        // FIX: Printed filename now matches actual filename
-        System.out.println("-> Created dictionary_fixed_length.txt (" + MAX_N + " words)");
+        for (int n : SIZES) {
+            // --- 1. Fixed Length (Length 10) ---
+            String fixedName = "dictionary_fixed_" + n + ".txt";
+            String[] fixedWords = generateSameLength(n, 10);
+            saveToFile(fixedName, fixedWords);
+            System.out.println("-> Created " + fixedName);
 
-        // 2. Variable Length (Normal Distribution)
-        String[] variableWords = generateNormal(MAX_N);
-        checkNormalDistribution(variableWords); 
-        saveToFile("dictionary_normal_distributed.txt", variableWords);
-        System.out.println("-> Created dictionary_normal_distributed.txt (" + MAX_N + " words)");
+            // --- 2. Variable Length (Normal Distribution) ---
+            String normName = "dictionary_normal_" + n + ".txt";
+            String[] variableWords = generateNormal(n);
+            
+            // Visual Check for EVERY dictionary size
+            System.out.println("\n--- Visual Check for N=" + n + " ---");
+            checkNormalDistribution(variableWords);
+            
+            saveToFile(normName, variableWords);
+            System.out.println("-> Created " + normName);
+            System.out.println("--------------------------------------------------");
+        }
         
-        System.out.println("Done.");
+        System.out.println("All dictionaries generated successfully.");
     }
 
     public static void checkNormalDistribution(String[] words) {
@@ -35,7 +43,7 @@ public class Generator {
             return;
         }
 
-        int[] lengthCounts = new int[30]; // Increased size just in case
+        int[] lengthCounts = new int[30]; 
         long totalLength = 0;
         long totalLengthSq = 0;
         int minLen = Integer.MAX_VALUE;
@@ -57,25 +65,24 @@ public class Generator {
         double variance = ((double) totalLengthSq / words.length) - (mean * mean);
         double stdDev = Math.sqrt(variance);
 
-        System.out.println("\n=== Normal Distribution Check ===");
-        System.out.printf("Total Words: %d%n", words.length);
-        System.out.printf("Mean Length: %.2f (Expected ~11.0)%n", mean);
-        System.out.printf("Std Dev:     %.2f (Expected ~4.0)%n", stdDev);
-        System.out.println("Length Histogram:");
+        System.out.printf("Stats: Mean=%.2f (Target ~11.0) | StdDev=%.2f | Range=[%d, %d]%n", 
+                          mean, stdDev, minLen, maxLen);
+        System.out.println("Histogram:");
 
         int maxCount = 0;
         for (int c : lengthCounts) maxCount = Math.max(maxCount, c);
 
         for (int i = minLen; i <= maxLen; i++) {
             int count = lengthCounts[i];
-            int barLen = (int) ((double) count / maxCount * 40); 
+            // Normalize bar length to max 40 chars
+            int barLen = (maxCount == 0) ? 0 : (int) ((double) count / maxCount * 40); 
             
             StringBuilder bar = new StringBuilder();
             for (int k = 0; k < barLen; k++) bar.append("*");
             
             System.out.printf("%2d | %-40s (%d)%n", i, bar.toString(), count);
         }
-        System.out.println("=================================\n");
+        System.out.println();
     }
 
     private static void saveToFile(String filename, String[] words) {
@@ -100,15 +107,11 @@ public class Generator {
     public static String[] generateNormal(int n) {
         String[] words = new String[n];
         for (int i = 0; i < n; i++) {
-            // FIX: 
-            // 1. Shifted Mean to 11 to avoid short-word collisions (length 2-3)
-            // 2. Increased StdDev to 4 for a wider spread
-            // 3. Used Math.round to avoid flooring bias
+            // Mean ~11, StdDev ~4
             double val = random.nextGaussian() * 4 + 11;
             int len = (int) Math.round(val);
             
-            // Safe clamping
-            if (len < 4) len = 4;   // Minimum 4 avoids most collisions
+            if (len < 4) len = 4;
             if (len > 20) len = 20;
             
             words[i] = generateWord(len);
