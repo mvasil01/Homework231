@@ -1,76 +1,88 @@
-public class CompressedTrieNode{
+/**
+ * A node in the {@link CompressedTrie}.
+ * <p>
+ * Each node stores:
+ * <ul>
+ *   <li>A {@link RobinHoodHashing} table of outgoing {@link Edge} objects.</li>
+ *   <li>A flag {@link #isEndOfWord} indicating whether this node terminates a word.</li>
+ *   <li>An integer {@link #importance} which counts how many times the word
+ *       represented by this node has appeared in the training text.</li>
+ * </ul>
+ * </p>
+ */
+public class CompressedTrieNode {
+
+    /**
+     * Hash table of outgoing edges from this node.
+     * Each edge label represents a compressed path segment to a child node.
+     */
     private RobinHoodHashing edgeList;
+
+    /**
+     * Indicates whether this node corresponds to the end of a valid word.
+     */
     public boolean isEndOfWord;
 
+    /**
+     * The importance/frequency counter for the word that ends at this node.
+     * This is typically incremented when the word appears in the training text.
+     */
     public int importance;
 
-    public CompressedTrieNode(){
+    /**
+     * Constructs a new {@code CompressedTrieNode} with an empty edge list
+     * and {@link #isEndOfWord} set to {@code false}.
+     */
+    public CompressedTrieNode() {
         edgeList = new RobinHoodHashing();
         isEndOfWord = false;
+        importance = 0;
     }
 
-    public void insertEdge(Edge edge){
-        if(edge == null){
+    /**
+     * Inserts an outgoing edge from this node.
+     * <p>
+     * The edge is stored in the underlying {@link RobinHoodHashing} table.
+     * If the {@code edge} argument is {@code null}, a {@link RuntimeException}
+     * is thrown.
+     * </p>
+     *
+     * @param edge the edge to insert (must not be {@code null})
+     * @throws RuntimeException if {@code edge} is {@code null}
+     */
+    public void insertEdge(Edge edge) {
+        if (edge == null) {
             throw new RuntimeException("The edge given to insert is null");
         }
         edgeList.insert(edge);
     }
 
-
-    public Edge getEdgeByFirstChar(char c){
+    /**
+     * Returns the outgoing edge whose label starts with the given character,
+     * or {@code null} if no such edge exists.
+     * <p>
+     * This is a convenience method used by the trie logic to select the next
+     * edge based on the first character of the remaining word segment.
+     * </p>
+     *
+     * @param c the first character of the desired edge label
+     * @return the matching {@link Edge}, or {@code null} if none is found
+     */
+    public Edge getEdgeByFirstChar(char c) {
         return edgeList.getEdge(c);
     }
 
+    /**
+     * Returns all outgoing edges from this node as an array.
+     * <p>
+     * The returned array is the internal table from {@link RobinHoodHashing},
+     * so it may contain {@code null} entries or unoccupied slots. Callers
+     * should check for {@code null} and {@code e.occupied} when iterating.
+     * </p>
+     *
+     * @return the internal {@link Edge} array, possibly containing {@code null}s
+     */
     public Edge[] getAllEdges() {
         return edgeList.getTable();
-    }
-
-
-    public static void main(String[] args) {
-
-        // Create a CompressedTrieNode (this will be our parent node)
-        CompressedTrieNode parent = new CompressedTrieNode();
-
-        // Create some child nodes to attach via edges
-        CompressedTrieNode child1 = new CompressedTrieNode();
-        CompressedTrieNode child2 = new CompressedTrieNode();
-        CompressedTrieNode child3 = new CompressedTrieNode();
-
-        // Create edges with labels
-        Edge e1 = new Edge("apple", child1);
-        Edge e2 = new Edge("banana", child2);
-        Edge e3 = new Edge("cherry", child3);
-
-        // Insert edges into the parent node
-        parent.insertEdge(e1);
-        parent.insertEdge(e2);
-        parent.insertEdge(e3);
-
-        // Print confirmation
-        System.out.println("=== Edges inserted into parent node ===");
-        for (char c : new char[] {'a', 'b', 'c'}) {
-            Edge found = parent.getEdgeByFirstChar(c);
-            if (found != null) {
-                System.out.println("Found edge starting with '" + c + "': " + found.label);
-            } else {
-                System.out.println("No edge starting with '" + c + "'");
-            }
-        }
-
-        // Try to search for a non-existent edge
-        char missing = 'z';
-        Edge notFound = parent.getEdgeByFirstChar(missing);
-        System.out.println("\nSearching for '" + missing + "'...");
-        if (notFound == null) {
-            System.out.println("No edge found starting with '" + missing + "' (as expected).");
-        } else {
-            System.out.println("Unexpectedly found: " + notFound.label);
-        }
-
-        // Test the isEndOfWord flag
-        System.out.println("\n=== Testing isEndOfWord flag ===");
-        System.out.println("Initially: " + parent.isEndOfWord);
-        parent.isEndOfWord = true;
-        System.out.println("After setting: " + parent.isEndOfWord);
     }
 }
