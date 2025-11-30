@@ -165,3 +165,6 @@ Included tests cover:
 Originally implemented for **EPL231 – Data Structures**.  
 All structures implemented manually without Java built-in collections (except IO).
 
+Authors:
+    Markos Vasili   UC1376829
+    Ioannis Charalampous    UC1367186

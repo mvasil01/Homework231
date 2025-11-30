@@ -54,13 +54,21 @@ TestRobinHood.java            — Hash table tests
 Compile everything:
 
 ```bash
-javac *.java
+javac AutocompleteApp.java
+
+or
+
+javac AutocompleteServer.java
 ```
 
 Run the interactive menu:
 
 ```bash
 java AutocompleteApp dictionary.txt training.txt
+
+or 
+
+java AutocompleteServer dictionary.txt training.txt (This starts the local host server. Then open the index.html in the browser)
 ```
 
 ---
