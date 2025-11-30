@@ -1,3 +1,4 @@
+package ID1376829.ID1367186;
 /**
  * A node in the {@link CompressedTrie}.
  * <p>

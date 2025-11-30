@@ -1,3 +1,4 @@
+package ID1376829.ID1367186;
 /**
  * A Robin Hood hashing table used to store outgoing edges of a compressed trie node.
  * <p>

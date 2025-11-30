@@ -1,3 +1,4 @@
+package ID1376829.ID1367186;
 /**
  * A compressed trie (radix tree) used for efficient storage and lookup
  * of words, along with importance (frequency) information.

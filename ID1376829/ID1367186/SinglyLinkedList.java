@@ -1,3 +1,4 @@
+package ID1376829.ID1367186;
 public class SinglyLinkedList {
 	
 	protected class Node{

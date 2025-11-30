@@ -1,3 +1,4 @@
+package ID1376829.ID1367186;
 /**
  * A simple binary min-heap for {@link WordFrequency} objects.
  * <p>

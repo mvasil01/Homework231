@@ -1,3 +1,4 @@
+package ID1376829.ID1367186;
 public class Trie {
 
     public final static int alphabetSize = 26;
